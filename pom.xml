@@ -1,12 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.kennycason</groupId>
     <artifactId>kumo</artifactId>
-    <version>1.13</version>
+    <version>1.29-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>${project.artifactId}</name>
     <description>Kumo's goal is to create a powerful and user friendly Word Cloud API in Java. Kumo directly generates an image file without the need to create an applet (as many other libraries do).</description>
@@ -26,8 +24,9 @@
         <java.target>1.8</java.target>
         <project.build.sourceEncoding>${encoding}</project.build.sourceEncoding>
         <project.build.resourceEncoding>${encoding}</project.build.resourceEncoding>
-        <maven.compile.encoding>>${encoding}</maven.compile.encoding>
+        <maven.compile.encoding>&gt;${encoding}</maven.compile.encoding>
         <maven.compiler.target>${java.target}</maven.compiler.target>
+        <automatic.module.name>${project.groupId}.${project.artifactId}</automatic.module.name>
     </properties>
 
     <dependencyManagement>
@@ -56,21 +55,34 @@
 
             <!-- logging -->
             <dependency>
+                <groupId>ch.qos.logback</groupId>
+                <artifactId>logback-classic</artifactId>
+                <version>1.2.3</version>
+                <scope>compile</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.logging.log4j</groupId>
+                <artifactId>log4j-to-slf4j</artifactId>
+                <version>2.9.1</version>
+                <scope>compile</scope>
+            </dependency>
+            <dependency>
                 <groupId>org.slf4j</groupId>
                 <artifactId>slf4j-api</artifactId>
-                <version>1.7.25</version>
+                <version>1.7.30</version>
+                <scope>compile</scope>
             </dependency>
             <dependency>
                 <groupId>org.slf4j</groupId>
-                <artifactId>slf4j-log4j12</artifactId>
-                <version>1.7.25</version>
-                <scope>test</scope>
+                <artifactId>jul-to-slf4j</artifactId>
+                <version>1.7.30</version>
+                <scope>compile</scope>
             </dependency>
             <dependency>
-                <groupId>log4j</groupId>
-                <artifactId>log4j</artifactId>
-                <version>1.2.17</version>
-                <scope>test</scope>
+                <groupId>org.slf4j</groupId>
+                <artifactId>log4j-over-slf4j</artifactId>
+                <version>1.7.30</version>
+                <scope>compile</scope>
             </dependency>
 
             <!-- misc -->
@@ -87,17 +99,17 @@
             <dependency>
                 <groupId>org.jsoup</groupId>
                 <artifactId>jsoup</artifactId>
-                <version>1.8.2</version>
+                <version>1.12.1</version>
             </dependency>
             <dependency>
                 <groupId>com.beust</groupId>
                 <artifactId>jcommander</artifactId>
-                <version>1.48</version>
+                <version>1.72</version>
             </dependency>
             <dependency>
                 <groupId>com.github.davidmoten</groupId>
                 <artifactId>rtree</artifactId>
-                <version>0.8.0.1</version>
+                <version>0.8.6</version>
             </dependency>
 
             <!-- test -->
@@ -138,17 +150,14 @@
         <connection>scm:git:git@github.com:kennycason/kumo.git</connection>
         <developerConnection>scm:git:git@github.com:kennycason/kumo.git</developerConnection>
         <url>https://github.com/kennycason/kumo</url>
-    </scm>
+      <tag>HEAD</tag>
+  </scm>
 
     <distributionManagement>
         <snapshotRepository>
             <id>ossrh</id>
             <url>https://oss.sonatype.org/content/repositories/snapshots</url>
         </snapshotRepository>
-        <repository>
-            <id>ossrh</id>
-            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
-        </repository>
     </distributionManagement>
 
     <profiles>
@@ -156,6 +165,45 @@
             <id>release</id>
             <build>
                 <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-source-plugin</artifactId>
+                        <version>3.2.1</version>
+                        <executions>
+                            <execution>
+                                <id>attach-sources</id>
+                                <goals>
+                                    <goal>jar-no-fork</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                        <version>3.2.0</version>
+                        <executions>
+                            <execution>
+                                <id>attach-javadocs</id>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <javadocExecutable>${java.home}/bin/javadoc</javadocExecutable>
+                            <links>
+                                <link>http://docs.oracle.com/javase/8/docs/api/</link>
+                            </links>
+                            <encoding>utf-8</encoding>
+                            <show>public</show>
+                            <!-- Speeds up the build of the javadocs -->
+                            <quiet>true</quiet>
+                            <use>false</use>
+                            <!--
+                            Use this in JDK 8 environment to skip hard java doc syntax check.
+                              <additionalparam>-Xdoclint:none</additionalparam> -->
+                        </configuration>
+                    </plugin>
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-gpg-plugin</artifactId>
@@ -181,7 +229,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-compiler-plugin</artifactId>
-                    <version>3.5.1</version>
+                    <version>3.8.1</version>
                     <configuration>
                         <source>${java.source}</source>
                         <target>${java.target}</target>
@@ -190,47 +238,30 @@
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-source-plugin</artifactId>
-                    <version>2.4</version>
-                    <executions>
-                        <execution>
-                            <id>attach-sources</id>
-                            <goals>
-                                <goal>jar-no-fork</goal>
-                            </goals>
-                        </execution>
-                    </executions>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>2.22.0</version>
+                    <configuration>
+                        <argLine>-Xms256m -Xmx768m -XX:+CMSClassUnloadingEnabled -Dfile.encoding=UTF-8</argLine>
+                        <excludes>
+                            <exclude>**ITest.java</exclude>
+                        </excludes>
+                    </configuration>
                 </plugin>
                 <plugin>
-                    <artifactId>maven-javadoc-plugin</artifactId>
-                    <version>2.10.3</version>
-                    <executions>
-                        <execution>
-                            <id>attach-javadocs</id>
-                            <goals>
-                                <goal>jar</goal>
-                            </goals>
-                        </execution>
-                    </executions>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-jar-plugin</artifactId>
                     <configuration>
-                        <javadocExecutable>${java.home}/../bin/javadoc</javadocExecutable>
-                        <links>
-                            <link>http://docs.oracle.com/javase/8/docs/api/</link>
-                        </links>
-                        <encoding>utf-8</encoding>
-                        <show>public</show>
-                        <!-- Speeds up the build of the javadocs -->
-                        <quiet>true</quiet>
-                        <use>false</use>
-                        <!--
-                        Use this in JDK 8 environment to skip hard java doc syntax check.
-                          <additionalparam>-Xdoclint:none</additionalparam> -->
+                        <archive>
+                            <manifestEntries>
+                                <Automatic-Module-Name>${automatic.module.name}</Automatic-Module-Name>
+                            </manifestEntries>
+                        </archive>
                     </configuration>
                 </plugin>
                 <plugin>
                     <groupId>org.sonatype.plugins</groupId>
                     <artifactId>nexus-staging-maven-plugin</artifactId>
-                    <version>1.6.4</version>
+                    <version>1.6.8</version>
                     <extensions>true</extensions>
                     <configuration>
                         <serverId>ossrh</serverId>
@@ -240,18 +271,17 @@
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-surefire-plugin</artifactId>
-                    <version>2.20</version>
+                    <artifactId>maven-release-plugin</artifactId>
+                    <version>3.0.0-M1</version>
                     <configuration>
-                        <argLine>-Xms256m -Xmx768m -XX:+CMSClassUnloadingEnabled -Dfile.encoding=UTF-8</argLine>
-                        <excludes>
-                            <exclude>**ITest.java</exclude>
-                        </excludes>
+                        <tagNameFormat>v@{project.version}</tagNameFormat>
+                        <autoVersionSubmodules>true</autoVersionSubmodules>
+                        <releaseProfiles>release</releaseProfiles>
                     </configuration>
                 </plugin>
             </plugins>
         </pluginManagement>
-
+  
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -271,5 +301,4 @@
             </plugin>
         </plugins>
     </build>
-
 </project>

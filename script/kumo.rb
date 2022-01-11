@@ -1,14 +1,14 @@
 class Kumo < Formula
   desc "Word Clouds in Java"
   homepage "https://github.com/kennycason/kumo"
-  url "https://search.maven.org/remotecontent?filepath=com/kennycason/kumo-cli/1.13/kumo-cli-1.13.jar"
-  sha256 "ee811e97e9c23ad91be9e2c15cfbd5717d6dc3281c234d3b20767275142965e6"
+  url "https://search.maven.org/remotecontent?filepath=com/kennycason/kumo-cli/1.28/kumo-cli-1.28.jar"
+  sha256 "43e4e2ea9da62a2230deed9151d8484f80bd6ae5fef304eaadf3301378f45fb6"
 
   depends_on :java => "1.8+"
 
   def install
-    libexec.install "kumo-cli-1.13.jar"
-    bin.write_jar_script libexec/"kumo-cli-1.13.jar", "kumo"
+    libexec.install "kumo-cli-1.28.jar"
+    bin.write_jar_script libexec/"kumo-cli-1.28.jar", "kumo"
   end
 
   test do

@@ -1,10 +1,12 @@
-# Kumo
+
+
+# <img src="logo/Kumo02.png" alt="Kumo" height="28px"> Kumo
 
 Kumo's goal is to create a powerful and user friendly Word Cloud API in Java. Kumo directly generates an image file without the need to create an applet as many other libraries do.
 
 Please feel free to jump in and help improve Kumo! There are many places for performance optimization in Kumo!
 
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.kennycason/kumo-core/badge.svg?style=flat)](https://maven-badges.herokuapp.com/maven-central/com.kennycason/kumo-core)<br/>
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.kennycason/kumo-core/badge.svg?style=flat)](https://maven-badges.herokuapp.com/maven-central/com.kennycason/kumo-core)  [![CircleCI](https://circleci.com/gh/kennycason/kumo.svg?style=svg)](https://circleci.com/gh/kennycason/kumo)<br/>
 
 ### Current Features
 
@@ -32,7 +34,7 @@ Please feel free to jump in and help improve Kumo! There are many places for per
 <dependency>
     <groupId>com.kennycason</groupId>
     <artifactId>kumo-core</artifactId>
-    <version>1.13</version>
+    <version>1.28</version>
 </dependency>
 ```
 
@@ -41,7 +43,7 @@ Include `kumo-tokenizers` if you want Chinese serialization. More languages to c
 <dependency>
     <groupId>com.kennycason</groupId>
     <artifactId>kumo-tokenizers</artifactId>
-    <version>1.12</version>
+    <version>1.28</version>
 </dependency>
 ```
 
@@ -135,7 +137,7 @@ final Dimension dimension = new Dimension(600, 600);
 final WordCloud wordCloud = new WordCloud(dimension, CollisionMode.RECTANGLE);
 wordCloud.setPadding(0);
 wordCloud.setBackground(new RectangleBackground(dimension));
-wordCloud.setColorPalette(Color.RED, Color.GREEN, Color.YELLOW, Color.BLUE);
+wordCloud.setColorPalette(new ColorPalette(Color.RED, Color.GREEN, Color.YELLOW, Color.BLUE));
 wordCloud.setFontScalar(new LinearFontScalar(10, 40));
 wordCloud.build(wordFrequencies);
 wordCloud.writeToFile("kumo-core/output/wordcloud_rectangle.png");
@@ -419,4 +421,6 @@ kumo --input "https://www.haskell.org/, https://en.wikipedia.org/wiki/Haskell_(p
 
 ### Contributing
 
-My primary IDE of choice is IntelliJ due to their robust tooling as well as code analysis/inspections. If using [IntelliJ IDEA](https://www.jetbrains.com/idea/), I recommend importing `KumoIntelliJInspections.xml`. I am also consiering adding Checkstyle support.
+My primary IDE of choice is IntelliJ due to their robust tooling as well as code analysis/inspections. If using [IntelliJ IDEA](https://www.jetbrains.com/idea/), I recommend importing `KumoIntelliJInspections.xml`. I am also considering adding Checkstyle support.
+
+New tests that write images should write images out to `kumo-core/output_test/` instead of `kumo-core/output/` which is now used for images to showcase Kumo.

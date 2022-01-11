@@ -6,7 +6,7 @@ import com.kennycason.kumo.PolarWordCloud;
 import com.kennycason.kumo.WordCloud;
 import com.kennycason.kumo.WordFrequency;
 import com.kennycason.kumo.bg.Background;
-import com.kennycason.kumo.bg.PixelBoundryBackground;
+import com.kennycason.kumo.bg.PixelBoundaryBackground;
 import com.kennycason.kumo.cli.CliParameters.FontScalarType;
 import com.kennycason.kumo.cli.CliParameters.NormalizerType;
 import com.kennycason.kumo.cli.CliParameters.WordStartType;
@@ -18,8 +18,8 @@ import com.kennycason.kumo.font.scale.LogFontScalar;
 import com.kennycason.kumo.font.scale.SqrtFontScalar;
 import com.kennycason.kumo.nlp.FrequencyAnalyzer;
 import com.kennycason.kumo.nlp.normalize.*;
-import com.kennycason.kumo.nlp.tokenizer.WhiteSpaceWordTokenizer;
-import com.kennycason.kumo.nlp.tokenizer.WordTokenizer;
+import com.kennycason.kumo.nlp.tokenizer.core.WhiteSpaceWordTokenizer;
+import com.kennycason.kumo.nlp.tokenizer.api.WordTokenizer;
 import com.kennycason.kumo.nlp.tokenizers.ChineseWordTokenizer;
 import com.kennycason.kumo.nlp.tokenizers.EnglishWordTokenizer;
 import com.kennycason.kumo.palette.ColorPalette;
@@ -232,7 +232,7 @@ public class KumoCli {
 
     private static Background buildBackground(final String background) {
         try {
-            return new PixelBoundryBackground(toInputStream(background));
+            return new PixelBoundaryBackground(toInputStream(background));
         } catch (final IOException e) {
             throw new RuntimeException(e.getMessage(), e);
         }

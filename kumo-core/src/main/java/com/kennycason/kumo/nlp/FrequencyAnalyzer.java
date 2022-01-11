@@ -9,17 +9,21 @@ import com.kennycason.kumo.nlp.normalize.CharacterStrippingNormalizer;
 import com.kennycason.kumo.nlp.normalize.LowerCaseNormalizer;
 import com.kennycason.kumo.nlp.normalize.Normalizer;
 import com.kennycason.kumo.nlp.normalize.TrimToEmptyNormalizer;
-import com.kennycason.kumo.nlp.tokenizer.WhiteSpaceWordTokenizer;
-import com.kennycason.kumo.nlp.tokenizer.WordTokenizer;
+import com.kennycason.kumo.nlp.tokenizer.core.WhiteSpaceWordTokenizer;
+import com.kennycason.kumo.nlp.tokenizer.api.WordTokenizer;
 import org.apache.commons.io.IOUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.util.*;
-import java.util.Map.Entry;
 import java.util.stream.Collectors;
+
+import static java.util.stream.Collectors.reducing;
 
 /**
  * Created by kenny on 7/1/14.
@@ -77,13 +81,63 @@ public class FrequencyAnalyzer {
         return load(Collections.singletonList(doc.body().text()));
     }
 
+
     public List<WordFrequency> load(final List<String> texts) {
         final List<WordFrequency> wordFrequencies = new ArrayList<>();
 
+
         final Map<String, Integer> cloud = buildWordFrequencies(texts, wordTokenizer);
-        for (final Entry<String, Integer> wordCount : cloud.entrySet()) {
-            wordFrequencies.add(new WordFrequency(wordCount.getKey(), wordCount.getValue()));
+        cloud.forEach((key, value) -> wordFrequencies.add(new WordFrequency(key, value)));
+        return takeTopFrequencies(wordFrequencies);
+    }
+
+
+    /**
+     *load data with auto fill function, if word exist, multiple the words. Else use nothing instead
+     * the first input parameter can be  InputStream or list of string
+     * @param autoFill decide whether or not to fill the cloud automatically
+     * @param autoFillWord  is used to define use what word to fill the cloud when there is no enough word.
+     */
+    public List<WordFrequency> load(final InputStream inputStream, boolean autoFill, String autoFillWord) throws IOException {
+        return load(IOUtils.readLines(inputStream, characterEncoding), autoFill, autoFillWord);
+    }
+    public List<WordFrequency> load(final InputStream inputStream, boolean autoFill) throws IOException {
+        return load(IOUtils.readLines(inputStream, characterEncoding), autoFill, "nothing");
+    }
+    //if enable autoFill but not specify autoFillWord, use nothing as default
+    //also allow use List<String> directly
+    public List<WordFrequency> load(final List<String> texts, boolean autoFill){
+        return load(texts, autoFill, "nothing");
+    }
+    //If autoFill is false, just call load
+    //Else if there are some words to draw, repeat them until the number of characters is similar with wordFrequenciesToReturn
+    //Else repeat autoFillWord to satisfy the drawing cloud need.
+    //Note: the repeat time is dependence on the sum of word length. We consider character number is more important.
+    //Which means long word will be repeated less
+    public List<WordFrequency> load(final List<String> texts, boolean autoFill, String autoFillWord) {
+        if(!autoFill){
+            return load(texts);
         }
+
+        final List<WordFrequency> wordFrequencies = new ArrayList<>();
+
+        final Map<String, Integer> cloud = buildWordFrequencies(texts, wordTokenizer);
+        int totalLength = 0;
+        for (Map.Entry<String, Integer> entry : cloud.entrySet()) {
+            totalLength += entry.getKey().length();
+        }
+
+        if (totalLength == 0){
+            cloud.put(autoFillWord,1);
+            totalLength = autoFillWord.length();
+            cloud.forEach((key, value) -> wordFrequencies.add(new WordFrequency(key, value)));
+
+        }
+        final int timesToAdd = Math.max(wordFrequenciesToReturn / totalLength,1);
+        for (int i = 0; i < timesToAdd; i++) {
+            cloud.forEach((key, value) -> wordFrequencies.add(new WordFrequency(key, value)));
+        }
+
         return takeTopFrequencies(wordFrequencies);
     }
     
@@ -92,48 +146,36 @@ public class FrequencyAnalyzer {
     }
     
     private Map<String, Integer> buildWordFrequencies(final List<String> texts, final WordTokenizer tokenizer) {
-        final Map<String, Integer> wordFrequencies = new HashMap<>();
-        for (final String text : texts) {
-            final List<String> words = filter(tokenizer.tokenize(text));
-
-            for (final String word : words) {
-                final String normalized = normalize(word);
-                wordFrequencies.put(normalized,
-                                    wordFrequencies.getOrDefault(normalized, 0) + 1);
-            }
-        }
-        return wordFrequencies;
+        return texts.stream()
+                    .map(tokenizer::tokenize)
+                    .flatMap(List::stream)
+                    .map(this::normalize)
+                    .filter(buildFilter())
+                    .collect(Collectors.groupingBy(e -> e, reducing(0, e -> 1, Integer::sum)));
     }
 
-    private List<String> filter(final List<String> words) {
+    private Filter buildFilter() {
         final List<Filter> allFilters = new ArrayList<>();
         allFilters.add(new StopWordFilter(stopWords));
         allFilters.add(new WordSizeFilter(minWordLength, maxWordLength));
         allFilters.addAll(filters);
-        final CompositeFilter compositeFilter = new CompositeFilter(allFilters);
-
-        return words.stream()
-                    .filter(compositeFilter)
-                    .collect(Collectors.toList());
+        return new CompositeFilter(allFilters);
     }
 
     private String normalize(final String word) {
         String normalized = word;
         for (final Normalizer normalizer : normalizers) {
-            normalized = normalizer.normalize(normalized);
+            normalized = normalizer.apply(normalized);
         }
         return normalized;
     }
 
     private List<WordFrequency> takeTopFrequencies(final Collection<WordFrequency> wordCloudEntities) {
-        if (wordCloudEntities.isEmpty()) { return Collections.emptyList(); }
-
-        final List<WordFrequency> sorted = wordCloudEntities
+        return wordCloudEntities
                 .stream()
                 .sorted(WordFrequency::compareTo)
+                .limit(wordFrequenciesToReturn)
                 .collect(Collectors.toList());
-
-        return sorted.subList(0, Math.min(sorted.size(), wordFrequenciesToReturn));
     }
 
     public void setStopWords(final Collection<String> stopWords) {
